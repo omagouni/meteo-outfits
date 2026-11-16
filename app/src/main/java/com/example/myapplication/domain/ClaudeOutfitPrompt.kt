@@ -3,6 +3,7 @@ package com.example.myapplication.domain
 import com.example.myapplication.data.model.ClothingCategory
 import com.example.myapplication.data.model.ClothingItem
 import com.example.myapplication.data.model.DayWeather
+import com.example.myapplication.ui.UiText
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import kotlin.math.roundToInt
@@ -130,7 +131,7 @@ object ClaudeOutfitPrompt {
             val allowed = if (item.category == ClothingCategory.ACCESSORY) accessories++ < MAX_ACCESSORIES
             else usedCategories.add(item.category)
             if (!allowed) return@mapNotNull null
-            WardrobePick(item, pick.reason.orEmpty().trim().take(MAX_REASON_LENGTH))
+            WardrobePick(item, UiText.Raw(pick.reason.orEmpty().trim().take(MAX_REASON_LENGTH)))
         }.distinctBy { it.item.id }
 
         val pickedCategories = picks.map { it.item.category }.toSet()

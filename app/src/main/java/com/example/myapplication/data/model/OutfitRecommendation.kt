@@ -1,13 +1,15 @@
 package com.example.myapplication.data.model
 
+import com.example.myapplication.ui.UiText
+
 data class OutfitRecommendation(
     val mainOutfit: List<OutfitItem>,
     val accessories: List<OutfitItem>,
-    val tip: String
+    val tip: UiText
 )
 
 data class OutfitItem(
-    val name: String,
+    val name: UiText,
     val emoji: String,
-    val description: String
+    val description: UiText
 )

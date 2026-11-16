@@ -19,11 +19,11 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.myapplication"
+        applicationId = "com.meteooutfits.app"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -85,6 +85,11 @@ dependencies {
 
     // Image loading
     implementation(libs.coil.compose)
+
+    // Widget et notification du matin
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
+    implementation(libs.androidx.work.runtime)
 
     // Claude (styliste IA)
     implementation(libs.anthropic.java)

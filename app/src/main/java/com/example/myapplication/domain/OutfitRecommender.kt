@@ -1,10 +1,13 @@
 package com.example.myapplication.domain
 
+import com.example.myapplication.R
 import com.example.myapplication.data.model.DayWeather
 import com.example.myapplication.data.model.OutfitItem
 import com.example.myapplication.data.model.OutfitRecommendation
+import com.example.myapplication.ui.UiText
 import kotlin.math.roundToInt
 
+/** Suggestion générique (sans garde-robe) : quoi porter pour une journée donnée. */
 object OutfitRecommender {
 
     /** Au-delà de cet écart min/max dans la journée, on conseille une couche amovible. */
@@ -13,103 +16,93 @@ object OutfitRecommender {
     /** Probabilité de pluie à partir de laquelle on sort le parapluie. */
     private const val RAIN_PROBABILITY_THRESHOLD = 0.5
 
+    private fun item(nameRes: Int, emoji: String, descRes: Int, vararg descArgs: Any) =
+        OutfitItem(UiText.res(nameRes), emoji, UiText.res(descRes, *descArgs))
+
     fun getOutfit(day: DayWeather): OutfitRecommendation {
-        val mainOutfit = mutableListOf<OutfitItem>()
-        val accessories = mutableListOf<OutfitItem>()
+        val main = mutableListOf<OutfitItem>()
+        val extras = mutableListOf<OutfitItem>()
         val condition = day.condition.lowercase()
         // On s'habille pour la température ressentie, pas la température brute.
         val temp = day.feelsLike
         val windSpeed = day.windKmh
         val rainy = isRainy(day)
+        val t = temp.roundToInt()
 
         when {
             temp < 0 -> {
-                mainOutfit.add(OutfitItem("Heavy Winter Coat", "🧥", "Insulated & waterproof"))
-                mainOutfit.add(OutfitItem("Thermal Layers", "🧣", "Base + mid layers"))
-                mainOutfit.add(OutfitItem("Warm Boots", "🥾", "Insulated & waterproof"))
-                mainOutfit.add(OutfitItem("Thick Wool Pants", "👖", "Wind-resistant"))
-                accessories.add(OutfitItem("Warm Gloves", "🧤", "Thermal insulated"))
-                accessories.add(OutfitItem("Beanie Hat", "🧢", "Keeps your head warm"))
-                accessories.add(OutfitItem("Thick Scarf", "🧣", "Wrap up tight"))
+                main += item(R.string.oi_heavy_winter_coat, "🧥", R.string.oi_heavy_winter_coat_d)
+                main += item(R.string.oi_thermal_layers, "🧣", R.string.oi_thermal_layers_d)
+                main += item(R.string.oi_warm_boots, "🥾", R.string.oi_warm_boots_d)
+                main += item(R.string.oi_thick_wool_pants, "👖", R.string.oi_thick_wool_pants_d)
+                extras += item(R.string.oi_warm_gloves, "🧤", R.string.oi_warm_gloves_d)
+                extras += item(R.string.oi_beanie, "🧢", R.string.oi_beanie_d)
+                extras += item(R.string.oi_thick_scarf, "🧣", R.string.oi_thick_scarf_d)
             }
             temp < 5 -> {
-                mainOutfit.add(OutfitItem("Heavy Coat", "🧥", "Warm & cozy"))
-                mainOutfit.add(OutfitItem("Warm Sweater", "🧶", "Knit or fleece"))
-                mainOutfit.add(OutfitItem("Warm Pants", "👖", "Thick fabric"))
-                mainOutfit.add(OutfitItem("Winter Boots", "🥾", "Keep feet warm"))
-                accessories.add(OutfitItem("Scarf", "🧣", "Essential warmth"))
-                accessories.add(OutfitItem("Gloves", "🧤", "Protect your hands"))
+                main += item(R.string.oi_heavy_coat, "🧥", R.string.oi_heavy_coat_d)
+                main += item(R.string.oi_warm_sweater, "🧶", R.string.oi_warm_sweater_d)
+                main += item(R.string.oi_warm_pants, "👖", R.string.oi_warm_pants_d)
+                main += item(R.string.oi_winter_boots, "🥾", R.string.oi_winter_boots_d)
+                extras += item(R.string.oi_scarf, "🧣", R.string.oi_scarf_d)
+                extras += item(R.string.oi_gloves, "🧤", R.string.oi_gloves_d)
             }
             temp < 12 -> {
-                mainOutfit.add(OutfitItem("Jacket", "🧥", "Medium weight"))
-                mainOutfit.add(OutfitItem("Hoodie", "👕", "Comfortable layer"))
-                mainOutfit.add(OutfitItem("Jeans", "👖", "Classic fit"))
-                mainOutfit.add(OutfitItem("Sneakers", "👟", "Comfortable shoes"))
-                accessories.add(OutfitItem("Light Scarf", "🧣", "Optional warmth"))
+                main += item(R.string.oi_jacket, "🧥", R.string.oi_jacket_d)
+                main += item(R.string.oi_hoodie, "👕", R.string.oi_hoodie_d)
+                main += item(R.string.oi_jeans, "👖", R.string.oi_jeans_d)
+                main += item(R.string.oi_sneakers, "👟", R.string.oi_sneakers_d)
+                extras += item(R.string.oi_light_scarf, "🧣", R.string.oi_light_scarf_d)
             }
             temp < 20 -> {
-                mainOutfit.add(OutfitItem("Light Jacket", "🧥", "For cool breezes"))
-                mainOutfit.add(OutfitItem("Long Sleeve Shirt", "👔", "Breathable fabric"))
-                mainOutfit.add(OutfitItem("Chinos", "👖", "Smart casual"))
-                mainOutfit.add(OutfitItem("Casual Shoes", "👞", "Versatile footwear"))
+                main += item(R.string.oi_light_jacket, "🧥", R.string.oi_light_jacket_d)
+                main += item(R.string.oi_long_sleeve, "👔", R.string.oi_long_sleeve_d)
+                main += item(R.string.oi_chinos, "👖", R.string.oi_chinos_d)
+                main += item(R.string.oi_casual_shoes, "👞", R.string.oi_casual_shoes_d)
             }
             temp < 28 -> {
-                mainOutfit.add(OutfitItem("T-Shirt", "👕", "Light & breathable"))
-                mainOutfit.add(OutfitItem("Shorts or Light Pants", "🩳", "Stay cool"))
-                mainOutfit.add(OutfitItem("Sneakers", "👟", "Comfortable & airy"))
+                main += item(R.string.oi_tshirt, "👕", R.string.oi_tshirt_d)
+                main += item(R.string.oi_shorts_or_light, "🩳", R.string.oi_shorts_or_light_d)
+                main += item(R.string.oi_sneakers, "👟", R.string.oi_sneakers_airy_d)
             }
             else -> {
-                mainOutfit.add(OutfitItem("Tank Top", "🎽", "Maximum airflow"))
-                mainOutfit.add(OutfitItem("Light Shorts", "🩳", "Stay breezy"))
-                mainOutfit.add(OutfitItem("Sandals", "🩴", "Let your feet breathe"))
-                accessories.add(OutfitItem("Sun Hat", "👒", "Shade from the sun"))
+                main += item(R.string.oi_tank_top, "🎽", R.string.oi_tank_top_d)
+                main += item(R.string.oi_light_shorts, "🩳", R.string.oi_light_shorts_d)
+                main += item(R.string.oi_sandals, "🩴", R.string.oi_sandals_d)
+                extras += item(R.string.oi_sun_hat, "👒", R.string.oi_sun_hat_d)
             }
         }
 
         if (needsLayering(day)) {
-            accessories.add(
-                OutfitItem(
-                    "Removable Layer", "🧥",
-                    "${day.tempMin.roundToInt()}° → ${day.tempMax.roundToInt()}° today"
-                )
+            extras += item(
+                R.string.oi_removable_layer, "🧥", R.string.oi_removable_layer_d,
+                day.tempMin.roundToInt(), day.tempMax.roundToInt()
             )
         }
 
         if (rainy) {
-            accessories.add(OutfitItem("Umbrella", "☂️", rainDescription(day)))
-            accessories.add(OutfitItem("Rain Jacket", "🌧️", "Waterproof layer"))
-            if (temp < 15) {
-                accessories.add(OutfitItem("Waterproof Boots", "🥾", "Keep feet dry"))
-            }
+            extras += OutfitItem(UiText.res(R.string.oi_umbrella), "☂️", rainDescription(day))
+            extras += item(R.string.oi_rain_jacket, "🌧️", R.string.oi_rain_jacket_d)
+            if (temp < 15) extras += item(R.string.oi_waterproof_boots, "🥾", R.string.oi_waterproof_boots_d)
         }
 
         if (condition.contains("snow")) {
-            accessories.add(OutfitItem("Snow Boots", "🥾", "Traction & warmth"))
-            accessories.add(OutfitItem("Warm Hat", "🧢", "Cover your ears"))
+            extras += item(R.string.oi_snow_boots, "🥾", R.string.oi_snow_boots_d)
+            extras += item(R.string.oi_warm_hat, "🧢", R.string.oi_warm_hat_d)
         }
 
-        if (windSpeed > 25) {
-            accessories.add(OutfitItem("Windbreaker", "🌬️", "Block the strong winds"))
-        } else if (windSpeed > 15) {
-            accessories.add(OutfitItem("Light Windbreaker", "💨", "Some wind protection"))
-        }
+        if (windSpeed > 25) extras += item(R.string.oi_windbreaker, "🌬️", R.string.oi_windbreaker_d)
+        else if (windSpeed > 15) extras += item(R.string.oi_light_windbreaker, "💨", R.string.oi_light_windbreaker_d)
 
         if (condition.contains("clear") && !day.isNight) {
-            accessories.add(OutfitItem("Sunglasses", "🕶️", "Protect your eyes"))
-            if (temp > 20) {
-                accessories.add(OutfitItem("Sunscreen", "🧴", "SPF 30+ recommended"))
-            }
+            extras += item(R.string.oi_sunglasses, "🕶️", R.string.oi_sunglasses_d)
+            if (temp > 20) extras += item(R.string.oi_sunscreen, "🧴", R.string.oi_sunscreen_d)
         }
 
-        if (condition.contains("thunderstorm")) {
-            accessories.add(OutfitItem("Sturdy Umbrella", "⛈️", "Heavy-duty protection"))
-        }
+        if (condition.contains("thunderstorm")) extras += item(R.string.oi_sturdy_umbrella, "⛈️", R.string.oi_sturdy_umbrella_d)
+        if (condition.contains("fog") || condition.contains("mist")) extras += item(R.string.oi_reflective, "🦺", R.string.oi_reflective_d)
 
-        if (condition.contains("fog") || condition.contains("mist")) {
-            accessories.add(OutfitItem("Reflective Gear", "🦺", "Be visible in fog"))
-        }
-
-        return OutfitRecommendation(mainOutfit, accessories, generateTip(day, temp, condition, rainy))
+        return OutfitRecommendation(main, extras, UiText.res(tipRes(day, temp, condition, rainy)))
     }
 
     fun isRainy(day: DayWeather): Boolean {
@@ -122,27 +115,28 @@ object OutfitRecommender {
     fun needsLayering(day: DayWeather): Boolean =
         !day.isCurrent && day.tempMax - day.tempMin >= LAYERING_SPREAD
 
-    private fun rainDescription(day: DayWeather): String =
-        day.precipitationChance?.let { "${(it * 100).roundToInt()}% chance of rain" } ?: "Stay dry"
+    fun rainDescription(day: DayWeather): UiText =
+        day.precipitationChance?.let { UiText.res(R.string.reason_rain_chance, (it * 100).roundToInt()) }
+            ?: UiText.res(R.string.oi_umbrella_d)
 
-    private fun generateTip(day: DayWeather, temp: Double, condition: String, rainy: Boolean): String {
+    fun tipRes(day: DayWeather, temp: Double, condition: String, rainy: Boolean): Int {
         val windSpeed = day.windKmh
         return when {
-            temp < 0 -> "❄️ Extreme cold! Layer up heavily and limit time outdoors."
-            temp < 5 && windSpeed > 20 -> "🥶 Wind chill makes it feel much colder. Bundle up tight!"
-            temp < 5 -> "🧊 Freezing temperatures — dress in warm layers."
-            condition.contains("thunderstorm") -> "⛈️ Thunderstorms expected. Stay indoors if possible."
-            rainy && temp < 10 -> "🌧️ Cold rain — waterproof layers are a must."
-            rainy -> "🌦️ Don't forget your umbrella! Rainy weather ahead."
-            condition.contains("snow") -> "🌨️ Snowy conditions — wear insulated, waterproof gear."
-            temp > 35 -> "🔥 Extreme heat! Stay hydrated and seek shade."
-            temp > 28 -> "☀️ Hot weather — wear light fabrics and drink plenty of water."
-            needsLayering(day) -> "🌡️ Big temperature swing today — dress in layers you can remove."
-            condition.contains("clear") && day.isNight -> "🌙 Clear night — might get chilly, bring a light layer."
-            condition.contains("clear") && temp > 20 -> "☀️ Beautiful day! Light clothing and sun protection."
-            windSpeed > 25 -> "💨 Very windy today — secure loose items and wear a windbreaker."
-            condition.contains("fog") -> "🌫️ Low visibility — wear bright or reflective clothing."
-            else -> "👍 Enjoy your day! You're dressed for the weather."
+            temp < 0 -> R.string.tip_extreme_cold
+            temp < 5 && windSpeed > 20 -> R.string.tip_wind_chill
+            temp < 5 -> R.string.tip_freezing
+            condition.contains("thunderstorm") -> R.string.tip_thunderstorm
+            rainy && temp < 10 -> R.string.tip_cold_rain
+            rainy -> R.string.tip_rain
+            condition.contains("snow") -> R.string.tip_snow
+            temp > 35 -> R.string.tip_extreme_heat
+            temp > 28 -> R.string.tip_hot
+            needsLayering(day) -> R.string.tip_layering
+            condition.contains("clear") && day.isNight -> R.string.tip_clear_night
+            condition.contains("clear") && temp > 20 -> R.string.tip_beautiful_day
+            windSpeed > 25 -> R.string.tip_windy
+            condition.contains("fog") -> R.string.tip_fog
+            else -> R.string.tip_default
         }
     }
 }

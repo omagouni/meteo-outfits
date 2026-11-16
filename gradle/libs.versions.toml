@@ -13,6 +13,8 @@ okhttp = "4.12.0"
 coil = "2.5.0"
 anthropic = "3.3.0"
 desugarJdkLibs = "2.1.5"
+glance = "1.1.1"
+workManager = "2.10.1"
 lifecycleViewModelCompose = "2.6.1"
 
 [libraries]
@@ -39,6 +41,9 @@ okhttp-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-i
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 anthropic-java = { group = "com.anthropic", name = "anthropic-java", version.ref = "anthropic" }
 desugar-jdk-libs = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "desugarJdkLibs" }
+androidx-glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glance" }
+androidx-glance-material3 = { group = "androidx.glance", name = "glance-material3", version.ref = "glance" }
+androidx-work-runtime = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workManager" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
