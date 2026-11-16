@@ -33,6 +33,14 @@ android {
             "WEATHER_API_KEY",
             "\"${localProperties.getProperty("WEATHER_API_KEY", "")}\""
         )
+        // Clé Claude (optionnelle) pour le styliste IA. Voir README : à réserver à un usage perso,
+        // une clé embarquée dans un APK peut être extraite.
+        buildConfigField(
+            "String",
+            "ANTHROPIC_API_KEY",
+            "\"${localProperties.getProperty("ANTHROPIC_API_KEY")
+                ?: (project.findProperty("ANTHROPIC_API_KEY") as String?) ?: ""}\""
+        )
     }
 
     buildTypes {
@@ -47,6 +55,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        // Le SDK Anthropic utilise java.time, absent avant Android 8 (API 26)
+        isCoreLibraryDesugaringEnabled = true
     }
     buildFeatures {
         compose = true
@@ -75,6 +85,10 @@ dependencies {
 
     // Image loading
     implementation(libs.coil.compose)
+
+    // Claude (styliste IA)
+    implementation(libs.anthropic.java)
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

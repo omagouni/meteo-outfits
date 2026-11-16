@@ -11,21 +11,29 @@ data class WardrobePick(val item: ClothingItem, val reason: String)
 /** Une pièce dont on aurait besoin mais qu'aucun vêtement de la garde-robe ne couvre. */
 data class MissingSlot(val category: ClothingCategory, val targetWarmth: Int, val needsWaterproof: Boolean)
 
+enum class PlanSource { RULES, AI }
+
 data class WardrobeOutfit(
     val picks: List<WardrobePick>,
-    val missing: List<MissingSlot>
+    val missing: List<MissingSlot>,
+    /** Conseil de style (fourni par l'IA). */
+    val tip: String? = null,
+    val source: PlanSource = PlanSource.RULES
 )
 
 /**
- * Point d'extension : l'implémentation actuelle est à base de règles ([RuleBasedOutfitPlanner]).
- * Un planner LLM pourra implémenter la même interface (en recevant la météo + la garde-robe
- * sérialisée) et retomber sur les règles en cas d'erreur réseau.
+ * Choisit une tenue dans la garde-robe pour une journée.
+ * Implémentations : [RuleBasedOutfitPlanner] (instantané, hors ligne) et
+ * [ClaudeOutfitPlanner] (styliste IA, réseau).
  */
 interface OutfitPlanner {
-    fun plan(day: DayWeather, wardrobe: List<ClothingItem>, referenceDay: Long): WardrobeOutfit
+    suspend fun plan(day: DayWeather, wardrobe: List<ClothingItem>, referenceDay: Long): WardrobeOutfit
 }
 
 object RuleBasedOutfitPlanner : OutfitPlanner {
+
+    override suspend fun plan(day: DayWeather, wardrobe: List<ClothingItem>, referenceDay: Long) =
+        planNow(day, wardrobe, referenceDay)
 
     private const val MAX_WARMTH_GAP = 2
     private const val MAX_ACCESSORIES = 2
@@ -39,7 +47,8 @@ object RuleBasedOutfitPlanner : OutfitPlanner {
         else -> 1
     }
 
-    override fun plan(day: DayWeather, wardrobe: List<ClothingItem>, referenceDay: Long): WardrobeOutfit {
+    /** Version synchrone, utilisée pour l'affichage immédiat. */
+    fun planNow(day: DayWeather, wardrobe: List<ClothingItem>, referenceDay: Long): WardrobeOutfit {
         val target = targetWarmth(day.feelsLike)
         val rainy = OutfitRecommender.isRainy(day)
         val windy = day.windKmh > 25

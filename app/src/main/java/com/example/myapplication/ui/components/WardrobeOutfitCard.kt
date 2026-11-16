@@ -1,9 +1,12 @@
 package com.example.myapplication.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -12,16 +15,19 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.myapplication.data.model.AiStatus
 import com.example.myapplication.data.model.ClothingItem
 import com.example.myapplication.domain.LocalDays
 import com.example.myapplication.domain.WardrobeOutfit
@@ -35,7 +41,11 @@ fun WardrobeOutfitCard(
     outfit: WardrobeOutfit,
     canWearToday: Boolean,
     onWear: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    aiAvailable: Boolean = false,
+    aiEnabled: Boolean = false,
+    aiStatus: AiStatus = AiStatus.Off,
+    onToggleAi: (Boolean) -> Unit = {}
 ) {
     val today = LocalDays.today()
     val alreadyWorn = outfit.picks.isNotEmpty() && outfit.picks.all { it.item.lastWornEpochDay == today }
@@ -45,13 +55,52 @@ fun WardrobeOutfitCard(
             .fillMaxWidth()
             .padding(horizontal = 20.dp)
     ) {
-        Text(
-            "👚  From your wardrobe",
-            fontSize = 17.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                "👚  From your wardrobe",
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                modifier = Modifier.weight(1f)
+            )
+            if (aiAvailable) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .toggleable(value = aiEnabled, role = Role.Switch, onValueChange = onToggleAi)
+                        .background(Color.White.copy(alpha = if (aiEnabled) 0.35f else 0.12f))
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        if (aiEnabled) "✨ AI stylist on" else "✨ AI stylist",
+                        color = Color.White,
+                        fontSize = 12.sp,
+                        fontWeight = if (aiEnabled) FontWeight.Bold else FontWeight.Medium
+                    )
+                }
+            }
+        }
         Spacer(Modifier.height(8.dp))
+
+        when (aiStatus) {
+            AiStatus.Loading -> AiNote {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(14.dp),
+                    color = Color.White,
+                    strokeWidth = 2.dp
+                )
+                Spacer(Modifier.width(8.dp))
+                Text("Asking the AI stylist…", color = Color.White.copy(alpha = 0.85f), fontSize = 12.sp)
+            }
+            is AiStatus.Failed -> AiNote {
+                Text(aiStatus.message, color = Color.White.copy(alpha = 0.85f), fontSize = 12.sp)
+            }
+            else -> Unit
+        }
+        outfit.tip?.let { tip ->
+            AiNote { Text("✨ $tip", color = Color.White, fontSize = 13.sp, lineHeight = 18.sp) }
+        }
 
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             outfit.picks.forEach { pick ->
@@ -149,4 +198,18 @@ fun WardrobePromptCard(onOpenWardrobe: () -> Unit, modifier: Modifier = Modifier
             colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.3f), contentColor = Color.White)
         ) { Text("Open wardrobe") }
     }
+}
+
+@Composable
+private fun AiNote(content: @Composable RowScope.() -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color.White.copy(alpha = 0.1f))
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        content = content
+    )
 }

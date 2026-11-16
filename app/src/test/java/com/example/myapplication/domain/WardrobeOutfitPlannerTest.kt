@@ -45,13 +45,13 @@ class WardrobeOutfitPlannerTest {
 
     @Test
     fun `hot day picks light clothes and no outerwear`() {
-        val outfit = RuleBasedOutfitPlanner.plan(day(28.0, "Clear"), wardrobe, today)
+        val outfit = RuleBasedOutfitPlanner.planNow(day(28.0, "Clear"), wardrobe, today)
         assertEquals(listOf("tee", "shorts", "sandals"), outfit.ids())
     }
 
     @Test
     fun `freezing day picks warm layers and accessories`() {
-        val ids = RuleBasedOutfitPlanner.plan(day(-3.0), wardrobe, today).ids()
+        val ids = RuleBasedOutfitPlanner.planNow(day(-3.0), wardrobe, today).ids()
         assertTrue("parka" in ids)
         assertTrue("sweater" in ids)
         assertTrue("boots" in ids)
@@ -60,7 +60,7 @@ class WardrobeOutfitPlannerTest {
 
     @Test
     fun `rainy mild day prefers waterproof pieces and umbrella`() {
-        val ids = RuleBasedOutfitPlanner.plan(day(17.0, "Clouds", pop = 0.8), wardrobe, today).ids()
+        val ids = RuleBasedOutfitPlanner.planNow(day(17.0, "Clouds", pop = 0.8), wardrobe, today).ids()
         assertTrue("raincoat" in ids)
         assertTrue("umbrella" in ids)
     }
@@ -68,20 +68,20 @@ class WardrobeOutfitPlannerTest {
     @Test
     fun `avoids what was worn yesterday when an alternative exists`() {
         val tops = listOf(item("tee-a", TOP, 1, lastWorn = today - 1), item("tee-b", TOP, 1))
-        val ids = RuleBasedOutfitPlanner.plan(day(28.0, "Clear"), tops, today).ids()
+        val ids = RuleBasedOutfitPlanner.planNow(day(28.0, "Clear"), tops, today).ids()
         assertEquals(listOf("tee-b"), ids)
     }
 
     @Test
     fun `keeps what is already worn today`() {
         val tops = listOf(item("tee-a", TOP, 1), item("tee-b", TOP, 1, lastWorn = today))
-        val ids = RuleBasedOutfitPlanner.plan(day(28.0, "Clear"), tops, today).ids()
+        val ids = RuleBasedOutfitPlanner.planNow(day(28.0, "Clear"), tops, today).ids()
         assertEquals(listOf("tee-b"), ids)
     }
 
     @Test
     fun `reports missing slots`() {
-        val outfit = RuleBasedOutfitPlanner.plan(day(-3.0, "Rain"), listOf(item("tee", TOP, 1)), today)
+        val outfit = RuleBasedOutfitPlanner.planNow(day(-3.0, "Rain"), listOf(item("tee", TOP, 1)), today)
         val missing = outfit.missing.map { it.category }
         assertTrue(OUTERWEAR in missing)
         assertTrue(outfit.missing.first { it.category == OUTERWEAR }.needsWaterproof)

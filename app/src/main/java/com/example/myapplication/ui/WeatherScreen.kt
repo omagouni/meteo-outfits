@@ -59,6 +59,7 @@ import com.example.myapplication.viewmodel.WeatherViewModel
 fun WeatherScreen(viewModel: WeatherViewModel, onOpenWardrobe: () -> Unit) {
     val uiState by viewModel.uiState.collectAsState()
     val city by viewModel.city.collectAsState()
+    val aiEnabled by viewModel.aiEnabled.collectAsState()
     val focusManager = LocalFocusManager.current
 
     // Le fond suit la journée sélectionnée
@@ -224,7 +225,11 @@ fun WeatherScreen(viewModel: WeatherViewModel, onOpenWardrobe: () -> Unit) {
                                 WardrobeOutfitCard(
                                     outfit = wardrobeOutfit,
                                     canWearToday = state.canWearToday,
-                                    onWear = viewModel::wearSuggestedOutfit
+                                    onWear = viewModel::wearSuggestedOutfit,
+                                    aiAvailable = viewModel.aiAvailable,
+                                    aiEnabled = aiEnabled,
+                                    aiStatus = state.aiStatus,
+                                    onToggleAi = viewModel::setAiEnabled
                                 )
                             } else {
                                 WardrobePromptCard(onOpenWardrobe = onOpenWardrobe)
