@@ -1,0 +1,60 @@
+package com.example.myapplication.ui.theme
+
+import androidx.compose.ui.graphics.Color
+
+// Premium color palette - Warm gradient tones
+val SunnyGold = Color(0xFFFFB347)
+val SunsetOrange = Color(0xFFFF6B6B)
+val SkyBlue = Color(0xFF4ECDC4)
+val DeepBlue = Color(0xFF2C3E7B)
+val NightNavy = Color(0xFF0F1C3F)
+val StormGray = Color(0xFF636E72)
+val CloudWhite = Color(0xFFF8F9FA)
+val SoftWhite = Color(0xFFFFFBF5)
+val RainBlue = Color(0xFF74B9FF)
+val SnowWhite = Color(0xFFE8EDF1)
+val FogGray = Color(0xFFB2BEC3)
+
+// Light Theme
+val LightPrimary = Color(0xFF2C3E7B)
+val LightOnPrimary = Color(0xFFFFFFFF)
+val LightPrimaryContainer = Color(0xFFDBE1FF)
+val LightOnPrimaryContainer = Color(0xFF001551)
+val LightSecondary = Color(0xFF4ECDC4)
+val LightOnSecondary = Color(0xFFFFFFFF)
+val LightSecondaryContainer = Color(0xFFCEF5F1)
+val LightOnSecondaryContainer = Color(0xFF003833)
+val LightTertiary = Color(0xFFFFB347)
+val LightOnTertiary = Color(0xFFFFFFFF)
+val LightBackground = Color(0xFFF8F9FF)
+val LightOnBackground = Color(0xFF1A1B2E)
+val LightSurface = Color(0xFFF8F9FF)
+val LightOnSurface = Color(0xFF1A1B2E)
+val LightSurfaceVariant = Color(0xFFE2E2EC)
+val LightOnSurfaceVariant = Color(0xFF45464F)
+val LightOutline = Color(0xFF767680)
+
+// Dark Theme
+val DarkPrimary = Color(0xFFB4C5FF)
+val DarkOnPrimary = Color(0xFF002A78)
+val DarkPrimaryContainer = Color(0xFF1B3B90)
+val DarkOnPrimaryContainer = Color(0xFFDBE1FF)
+val DarkSecondary = Color(0xFF7EDDD5)
+val DarkOnSecondary = Color(0xFF003733)
+val DarkSecondaryContainer = Color(0xFF1B5B54)
+val DarkOnSecondaryContainer = Color(0xFFCEF5F1)
+val DarkTertiary = Color(0xFFFFCB8E)
+val DarkOnTertiary = Color(0xFF4A2800)
+val DarkBackground = Color(0xFF0F1126)
+val DarkOnBackground = Color(0xFFE3E1EC)
+val DarkSurface = Color(0xFF0F1126)
+val DarkOnSurface = Color(0xFFE3E1EC)
+val DarkSurfaceVariant = Color(0xFF45464F)
+val DarkOnSurfaceVariant = Color(0xFFC6C5D0)
+val DarkOutline = Color(0xFF90909A)
+
+// Card colors with transparency
+val CardLight = Color(0xCCFFFFFF)
+val CardDark = Color(0x66FFFFFF)
+val GlassWhite = Color(0x33FFFFFF)
+val GlassDark = Color(0x22000000)
