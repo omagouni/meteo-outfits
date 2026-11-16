@@ -256,7 +256,3 @@ private data class Star(
     val radius: Float,
     val twinkleOffset: Float
 )
-private data class Moon(
-    val x: Float,
-    val r: Float
-)   

@@ -5,11 +5,15 @@ import android.content.Context
 import androidx.core.content.edit
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.myapplication.data.local.WardrobeRepository
 import com.example.myapplication.data.model.DayWeather
 import com.example.myapplication.data.model.WeatherUiState
 import com.example.myapplication.data.remote.RetrofitClient
 import com.example.myapplication.domain.ForecastAggregator
+import com.example.myapplication.domain.LocalDays
+import com.example.myapplication.domain.OutfitPlanner
 import com.example.myapplication.domain.OutfitRecommender
+import com.example.myapplication.domain.RuleBasedOutfitPlanner
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -33,10 +37,40 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
     private val _city = MutableStateFlow(prefs.getString(KEY_CITY, DEFAULT_CITY) ?: DEFAULT_CITY)
     val city: StateFlow<String> = _city.asStateFlow()
 
+    private val wardrobe = WardrobeRepository.get(application)
+    private val planner: OutfitPlanner = RuleBasedOutfitPlanner
+
     private var fetchJob: Job? = null
 
     init {
         fetchWeather()
+        // Recalcule la tenue dès que la garde-robe change.
+        viewModelScope.launch {
+            wardrobe.items.collect {
+                _uiState.update { state -> if (state is WeatherUiState.Success) withOutfits(state) else state }
+            }
+        }
+    }
+
+    /** Recalcule les deux tenues (générique + garde-robe) pour le jour sélectionné. */
+    private fun withOutfits(state: WeatherUiState.Success): WeatherUiState.Success {
+        val day = state.selectedDay
+        val today = LocalDays.today()
+        val items = wardrobe.items.value
+        return state.copy(
+            outfit = OutfitRecommender.getOutfit(day),
+            wardrobeOutfit = if (items.isEmpty()) null
+            else planner.plan(day, items, referenceDay = day.epochDay ?: today),
+            canWearToday = day.isCurrent || day.epochDay == today
+        )
+    }
+
+    /** Enregistre que l'utilisateur porte aujourd'hui la tenue proposée. */
+    fun wearSuggestedOutfit() {
+        val state = _uiState.value as? WeatherUiState.Success ?: return
+        val ids = state.wardrobeOutfit?.picks?.map { it.item.id }.orEmpty()
+        if (!state.canWearToday || ids.isEmpty()) return
+        viewModelScope.launch { wardrobe.markWorn(ids, LocalDays.today()) }
     }
 
     fun updateCity(newCity: String) {
@@ -46,10 +80,7 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
     fun selectDay(index: Int) {
         _uiState.update { state ->
             if (state is WeatherUiState.Success && index in state.days.indices) {
-                state.copy(
-                    selectedIndex = index,
-                    outfit = OutfitRecommender.getOutfit(state.days[index])
-                )
+                withOutfits(state.copy(selectedIndex = index))
             } else state
         }
     }
@@ -77,11 +108,13 @@ class WeatherViewModel(application: Application) : AndroidViewModel(application)
                 val (label, days) = loadDays(cityName)
                 val index = previousIndex.coerceIn(0, days.lastIndex)
                 prefs.edit { putString(KEY_CITY, cityName) }
-                _uiState.value = WeatherUiState.Success(
-                    cityLabel = label,
-                    days = days,
-                    selectedIndex = index,
-                    outfit = OutfitRecommender.getOutfit(days[index])
+                _uiState.value = withOutfits(
+                    WeatherUiState.Success(
+                        cityLabel = label,
+                        days = days,
+                        selectedIndex = index,
+                        outfit = OutfitRecommender.getOutfit(days[index])
+                    )
                 )
             } catch (e: CancellationException) {
                 throw e

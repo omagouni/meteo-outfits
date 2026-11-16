@@ -49,12 +49,14 @@ import com.example.myapplication.ui.components.DaySelector
 import com.example.myapplication.ui.components.ErrorView
 import com.example.myapplication.ui.components.LoadingView
 import com.example.myapplication.ui.components.OutfitCard
+import com.example.myapplication.ui.components.WardrobeOutfitCard
+import com.example.myapplication.ui.components.WardrobePromptCard
 import com.example.myapplication.ui.components.WeatherBackground
 import com.example.myapplication.ui.components.WeatherHeader
 import com.example.myapplication.viewmodel.WeatherViewModel
 
 @Composable
-fun WeatherScreen(viewModel: WeatherViewModel) {
+fun WeatherScreen(viewModel: WeatherViewModel, onOpenWardrobe: () -> Unit) {
     val uiState by viewModel.uiState.collectAsState()
     val city by viewModel.city.collectAsState()
     val focusManager = LocalFocusManager.current
@@ -216,6 +218,19 @@ fun WeatherScreen(viewModel: WeatherViewModel) {
                             )
 
                             Spacer(modifier = Modifier.height(16.dp))
+
+                            val wardrobeOutfit = state.wardrobeOutfit
+                            if (wardrobeOutfit != null) {
+                                WardrobeOutfitCard(
+                                    outfit = wardrobeOutfit,
+                                    canWearToday = state.canWearToday,
+                                    onWear = viewModel::wearSuggestedOutfit
+                                )
+                            } else {
+                                WardrobePromptCard(onOpenWardrobe = onOpenWardrobe)
+                            }
+
+                            Spacer(modifier = Modifier.height(24.dp))
 
                             OutfitCard(outfit = state.outfit)
 
