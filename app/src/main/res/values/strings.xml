@@ -264,6 +264,7 @@
     <string name="meetup_subtitle">Coordinate outfits with a friend, for the weather where you meet</string>
     <string name="meetup_new">New meetup</string>
     <string name="meetup_received">I received an invitation</string>
+    <string name="meetup_my_name">Your first name</string>
     <string name="meetup_friend_name">Friend\'s name</string>
     <string name="meetup_city">City of the meetup</string>
     <string name="meetup_day">Day</string>

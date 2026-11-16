@@ -16,7 +16,8 @@ sealed class UiText {
     data class Joined(val parts: List<UiText>, val separator: String = " · ") : UiText()
 
     fun resolve(context: Context): String = when (this) {
-        is Res -> if (args.isEmpty()) context.getString(id) else context.getString(id, *args.toTypedArray())
+        is Res -> if (args.isEmpty()) context.getString(id)
+        else context.getString(id, *args.map { if (it is UiText) it.resolve(context) else it }.toTypedArray())
         is Raw -> value
         is Joined -> parts.joinToString(separator) { it.resolve(context) }
     }

@@ -43,13 +43,29 @@ android {
         )
     }
 
+    // Clé d'upload Google Play, lue depuis local.properties (jamais commitée).
+    // Sans ces valeurs (ex. CI), le build release n'est pas signé.
+    val keystorePath = localProperties.getProperty("KEYSTORE_PATH")
+    if (keystorePath != null) {
+        signingConfigs {
+            create("release") {
+                storeFile = rootProject.file(keystorePath)
+                storePassword = localProperties.getProperty("KEYSTORE_PASSWORD")
+                keyAlias = localProperties.getProperty("KEY_ALIAS")
+                keyPassword = localProperties.getProperty("KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            if (keystorePath != null) signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {

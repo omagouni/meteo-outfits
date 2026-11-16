@@ -98,7 +98,9 @@ object RuleBasedOutfitPlanner : OutfitPlanner {
     }
 
     private fun score(item: ClothingItem, slot: Slot, ctx: Context): Double {
-        var score = -abs(item.warmth - slot.targetWarmth) * 2.0
+        // Écart de chaleur au carré : une pièce deux crans à côté ne doit pas être rattrapée par la couleur.
+        val gap = abs(item.warmth - slot.targetWarmth)
+        var score = -gap * gap * 2.0
         if (slot.waterproofMatters && ctx.rainy) score += if (item.waterproof) 3.0 else -2.0
         if (ctx.windy && item.windproof) score += 2.0
         if (item.favorite) score += 0.5

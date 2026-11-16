@@ -22,7 +22,11 @@ object RetrofitClient {
 
     private val apiKeyInterceptor = Interceptor { chain ->
         val request = chain.request()
-        val url = request.url.newBuilder().addQueryParameter("appid", apiKey).build()
+        // Clé API + langue du téléphone (descriptions météo traduites par OpenWeatherMap)
+        val url = request.url.newBuilder()
+            .addQueryParameter("appid", apiKey)
+            .addQueryParameter("lang", java.util.Locale.getDefault().language.ifBlank { "en" })
+            .build()
         chain.proceed(request.newBuilder().url(url).build())
     }
 

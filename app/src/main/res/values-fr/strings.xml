@@ -252,6 +252,7 @@
     <string name="meetup_subtitle">Des tenues assorties avec un ami, selon la météo là où vous vous retrouvez</string>
     <string name="meetup_new">Nouveau rendez-vous</string>
     <string name="meetup_received">J\'ai reçu une invitation</string>
+    <string name="meetup_my_name">Ton prénom</string>
     <string name="meetup_friend_name">Prénom de l\'ami</string>
     <string name="meetup_city">Ville du rendez-vous</string>
     <string name="meetup_day">Jour</string>

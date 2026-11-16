@@ -50,6 +50,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.example.myapplication.R
+import com.example.myapplication.ui.UiText
+import com.example.myapplication.ui.asString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -74,7 +78,7 @@ fun ItemEditorScreen(
 ) {
     var draft by remember(initial.id) { mutableStateOf(initial) }
     var fetching by remember { mutableStateOf(false) }
-    var fetchMessage by remember { mutableStateOf<String?>(null) }
+    var fetchMessage by remember { mutableStateOf<UiText?>(null) }
     var confirmDelete by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -83,7 +87,7 @@ fun ItemEditorScreen(
         try {
             context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(uri)))
         } catch (_: ActivityNotFoundException) {
-            fetchMessage = "No browser available to open the link."
+            fetchMessage = UiText.res(R.string.no_browser)
         }
     }
 
@@ -98,13 +102,12 @@ fun ItemEditorScreen(
                         imageUrl = preview.imageUrl ?: draft.imageUrl,
                         brand = draft.brand.ifBlank { preview.brand.orEmpty() }
                     )
-                    fetchMessage = if (preview.title == null && preview.imageUrl == null)
-                        "No product info found on this page — fill it in manually."
-                    else "Imported from the link ✓"
+                    fetchMessage = UiText.res(
+                        if (preview.title == null && preview.imageUrl == null) R.string.import_none else R.string.imported_ok
+                    )
                 },
                 onFailure = { e ->
-                    fetchMessage = "Couldn't read this page (${e.message ?: "error"}). " +
-                        "Some shops block apps — fill it in manually."
+                    fetchMessage = UiText.res(R.string.import_failed, e.message ?: "error")
                 }
             )
             fetching = false
@@ -114,20 +117,20 @@ fun ItemEditorScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (isNew) "New item" else "Edit item") },
+                title = { Text(stringResource(if (isNew) R.string.new_item else R.string.edit_item)) },
                 navigationIcon = {
                     IconButton(onClick = onClose) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 actions = {
                     if (!isNew) {
                         IconButton(onClick = { confirmDelete = true }) {
-                            Icon(Icons.Rounded.Delete, contentDescription = "Delete")
+                            Icon(Icons.Rounded.Delete, contentDescription = stringResource(R.string.delete))
                         }
                     }
                     TextButton(onClick = { onSave(draft) }, enabled = draft.name.isNotBlank()) {
-                        Text("Save", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.save), fontWeight = FontWeight.Bold)
                     }
                 }
             )
@@ -143,12 +146,12 @@ fun ItemEditorScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // --- Lien produit ---
-            Text("Product link", style = MaterialTheme.typography.titleSmall)
+            Text(stringResource(R.string.product_link), style = MaterialTheme.typography.titleSmall)
             OutlinedTextField(
                 value = draft.productUrl,
                 onValueChange = { draft = draft.copy(productUrl = it) },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("https://shop.com/product/…") },
+                placeholder = { Text(stringResource(R.string.link_hint)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done)
             )
@@ -158,16 +161,16 @@ fun ItemEditorScreen(
                     if (fetching) CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
                     else Icon(Icons.Rounded.Download, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Import")
+                    Text(stringResource(R.string.import_label))
                 }
                 OutlinedButton(onClick = { validUrl?.let { openUri(it.toString()) } }, enabled = validUrl != null) {
                     Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Open")
+                    Text(stringResource(R.string.open_label))
                 }
             }
             fetchMessage?.let {
-                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(it.asString(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
 
             if (draft.imageUrl.isNotBlank() || draft.name.isNotBlank()) {
@@ -175,7 +178,7 @@ fun ItemEditorScreen(
                     ClothingThumbnail(draft, size = 96)
                     Spacer(Modifier.width(12.dp))
                     if (draft.imageUrl.isNotBlank()) {
-                        TextButton(onClick = { draft = draft.copy(imageUrl = "") }) { Text("Remove photo") }
+                        TextButton(onClick = { draft = draft.copy(imageUrl = "") }) { Text(stringResource(R.string.remove_photo)) }
                     }
                 }
             }
@@ -185,7 +188,7 @@ fun ItemEditorScreen(
                 value = draft.name,
                 onValueChange = { draft = draft.copy(name = it) },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Name *") },
+                label = { Text(stringResource(R.string.name_required)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
             )
@@ -194,7 +197,7 @@ fun ItemEditorScreen(
                     value = draft.brand,
                     onValueChange = { draft = draft.copy(brand = it) },
                     modifier = Modifier.weight(1f),
-                    label = { Text("Brand") },
+                    label = { Text(stringResource(R.string.brand)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
                 )
@@ -202,7 +205,7 @@ fun ItemEditorScreen(
                     value = draft.reference,
                     onValueChange = { draft = draft.copy(reference = it) },
                     modifier = Modifier.weight(1f),
-                    label = { Text("Reference") },
+                    label = { Text(stringResource(R.string.reference)) },
                     singleLine = true
                 )
             }
@@ -213,24 +216,24 @@ fun ItemEditorScreen(
             ) {
                 Icon(Icons.Rounded.TravelExplore, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
-                Text("Find it online")
+                Text(stringResource(R.string.find_online))
             }
 
             // --- Catégorie ---
-            Text("Category", style = MaterialTheme.typography.titleSmall)
+            Text(stringResource(R.string.category), style = MaterialTheme.typography.titleSmall)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ClothingCategory.entries.forEach { cat ->
                     FilterChip(
                         selected = draft.category == cat,
                         onClick = { draft = draft.copy(category = cat) },
-                        label = { Text("${cat.emoji} ${cat.label}") }
+                        label = { Text("${cat.emoji} ${stringResource(cat.labelRes)}") }
                     )
                 }
             }
 
             // --- Chaleur & protection ---
             Text(
-                "Warmth: ${ClothingItem.warmthLabel(draft.warmth)} (${draft.warmth}/5)",
+                stringResource(R.string.warmth_label, stringResource(ClothingItem.warmthRes(draft.warmth)), draft.warmth),
                 style = MaterialTheme.typography.titleSmall
             )
             Slider(
@@ -239,22 +242,23 @@ fun ItemEditorScreen(
                 valueRange = ClothingItem.MIN_WARMTH.toFloat()..ClothingItem.MAX_WARMTH.toFloat(),
                 steps = ClothingItem.MAX_WARMTH - ClothingItem.MIN_WARMTH - 1
             )
-            SwitchRow("💧 Waterproof", draft.waterproof) { draft = draft.copy(waterproof = it) }
-            SwitchRow("🌬️ Windproof", draft.windproof) { draft = draft.copy(windproof = it) }
-            SwitchRow("❤️ Favorite", draft.favorite) { draft = draft.copy(favorite = it) }
+            SwitchRow(stringResource(R.string.waterproof), draft.waterproof) { draft = draft.copy(waterproof = it) }
+            SwitchRow(stringResource(R.string.windproof), draft.windproof) { draft = draft.copy(windproof = it) }
+            SwitchRow(stringResource(R.string.favorite), draft.favorite) { draft = draft.copy(favorite = it) }
 
             OutlinedTextField(
                 value = draft.color,
                 onValueChange = { draft = draft.copy(color = it) },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Color") },
+                label = { Text(stringResource(R.string.color)) },
+                placeholder = { Text(stringResource(R.string.color_hint)) },
                 singleLine = true
             )
             OutlinedTextField(
                 value = draft.notes,
                 onValueChange = { draft = draft.copy(notes = it) },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Notes") },
+                label = { Text(stringResource(R.string.notes)) },
                 minLines = 2
             )
 
@@ -262,7 +266,7 @@ fun ItemEditorScreen(
                 onClick = { onSave(draft) },
                 enabled = draft.name.isNotBlank(),
                 modifier = Modifier.fillMaxWidth()
-            ) { Text(if (isNew) "Add to wardrobe" else "Save changes") }
+            ) { Text(stringResource(if (isNew) R.string.add_to_wardrobe else R.string.save_changes)) }
             Spacer(Modifier.height(24.dp))
         }
     }
@@ -270,13 +274,13 @@ fun ItemEditorScreen(
     if (confirmDelete) {
         AlertDialog(
             onDismissRequest = { confirmDelete = false },
-            title = { Text("Delete this item?") },
-            text = { Text("“${draft.name}” will be removed from your wardrobe.") },
+            title = { Text(stringResource(R.string.delete_q)) },
+            text = { Text(stringResource(R.string.delete_body, draft.name)) },
             confirmButton = {
-                TextButton(onClick = { confirmDelete = false; onDelete() }) { Text("Delete") }
+                TextButton(onClick = { confirmDelete = false; onDelete() }) { Text(stringResource(R.string.delete)) }
             },
             dismissButton = {
-                TextButton(onClick = { confirmDelete = false }) { Text("Cancel") }
+                TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }

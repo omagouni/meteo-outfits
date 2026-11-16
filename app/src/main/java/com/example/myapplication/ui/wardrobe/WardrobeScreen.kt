@@ -50,6 +50,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import com.example.myapplication.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -105,9 +108,9 @@ private fun WardrobeList(
             TopAppBar(
                 title = {
                     Column {
-                        Text("My Wardrobe", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.wardrobe_title), fontWeight = FontWeight.Bold)
                         Text(
-                            "$total item${if (total == 1) "" else "s"} · ${sort.label}",
+                            stringResource(R.string.wardrobe_subtitle, pluralStringResource(R.plurals.items_count, total, total), stringResource(sort.labelRes)),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -116,14 +119,14 @@ private fun WardrobeList(
                 actions = {
                     Box {
                         IconButton(onClick = { sortMenuOpen = true }) {
-                            Icon(Icons.AutoMirrored.Rounded.Sort, contentDescription = "Sort")
+                            Icon(Icons.AutoMirrored.Rounded.Sort, contentDescription = stringResource(R.string.sort_cd))
                         }
                         DropdownMenu(expanded = sortMenuOpen, onDismissRequest = { sortMenuOpen = false }) {
                             WardrobeSort.entries.forEach { option ->
                                 DropdownMenuItem(
                                     text = {
                                         Text(
-                                            option.label,
+                                            stringResource(option.labelRes),
                                             fontWeight = if (option == sort) FontWeight.Bold else FontWeight.Normal
                                         )
                                     },
@@ -139,7 +142,7 @@ private fun WardrobeList(
             ExtendedFloatingActionButton(
                 onClick = onAdd,
                 icon = { Icon(Icons.Rounded.Add, contentDescription = null) },
-                text = { Text("Add item") }
+                text = { Text(stringResource(R.string.add_item)) }
             )
         }
     ) { padding ->
@@ -150,12 +153,12 @@ private fun WardrobeList(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                placeholder = { Text("Search name, brand, reference…") },
+                placeholder = { Text(stringResource(R.string.search_wardrobe_hint)) },
                 leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
                 trailingIcon = {
                     if (query.isNotEmpty()) {
                         IconButton(onClick = { viewModel.setQuery("") }) {
-                            Icon(Icons.Rounded.Close, contentDescription = "Clear search")
+                            Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.clear_search))
                         }
                     }
                 },
@@ -171,14 +174,14 @@ private fun WardrobeList(
                     FilterChip(
                         selected = category == null,
                         onClick = { viewModel.setCategory(null) },
-                        label = { Text("All") }
+                        label = { Text(stringResource(R.string.filter_all)) }
                     )
                 }
                 items(ClothingCategory.entries) { cat ->
                     FilterChip(
                         selected = category == cat,
                         onClick = { viewModel.setCategory(if (category == cat) null else cat) },
-                        label = { Text("${cat.emoji} ${cat.label}") }
+                        label = { Text("${cat.emoji} ${stringResource(cat.labelRes)}") }
                     )
                 }
             }
@@ -215,14 +218,13 @@ private fun EmptyWardrobe(hasAnyItem: Boolean) {
         Text(if (hasAnyItem) "🔍" else "👚", fontSize = 56.sp)
         Spacer(Modifier.height(12.dp))
         Text(
-            if (hasAnyItem) "No item matches your filters" else "Your wardrobe is empty",
+            stringResource(if (hasAnyItem) R.string.empty_no_match else R.string.empty_title),
             style = MaterialTheme.typography.titleMedium
         )
         if (!hasAnyItem) {
             Spacer(Modifier.height(6.dp))
             Text(
-                "Add your clothes — paste a product link to import its name and photo — " +
-                    "and the Weather tab will pick what to wear from them.",
+                stringResource(R.string.empty_body),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -249,7 +251,7 @@ private fun ClothingItemRow(
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(
-                    item.name.ifBlank { "Untitled" },
+                    item.name.ifBlank { stringResource(R.string.untitled) },
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
@@ -272,7 +274,7 @@ private fun ClothingItemRow(
                     if (item.windproof) Badge("🌬️")
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        if (item.wearCount == 0) "Never worn" else "Worn ${item.wearCount}×",
+                        if (item.wearCount == 0) stringResource(R.string.never_worn) else stringResource(R.string.worn_times, item.wearCount),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -281,7 +283,7 @@ private fun ClothingItemRow(
             IconButton(onClick = onToggleFavorite) {
                 Icon(
                     if (item.favorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
-                    contentDescription = if (item.favorite) "Remove from favorites" else "Add to favorites",
+                    contentDescription = stringResource(if (item.favorite) R.string.fav_remove else R.string.fav_add),
                     tint = if (item.favorite) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }

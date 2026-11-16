@@ -68,8 +68,14 @@ object MatchyPlanner {
         val link = OutfitHarmony.linkColor(colors, partnerColors)
         val pairScore = OutfitHarmony.pairScore(colors, partnerColors)
 
+        // La note "base neutre" n'est utile qu'une fois, sur la première pièce neutre.
+        var neutralNoted = false
         val picks = chosen.filterNotNull().map { candidate ->
-            WardrobePick(candidate.item, matchyReason(candidate, partnerColors, partnerName, link))
+            val color = ColorFamily.fromText(candidate.item.color)
+            val allowNeutral = color.neutral && !neutralNoted
+            val reason = matchyReason(candidate, partnerColors, partnerName, if (allowNeutral) link else null)
+            if (allowNeutral && reason != candidate.reason) neutralNoted = true
+            WardrobePick(candidate.item, reason)
         }
         val missing = slots.filterIndexed { i, _ -> chosen.getOrNull(i) == null }
             .map { MissingSlot(it.category, it.targetWarmth, it.waterproofMatters && ctx.rainy) }
