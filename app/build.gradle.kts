@@ -19,11 +19,11 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.myapplication"
+        applicationId = "com.meteooutfits.app"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -43,13 +43,29 @@ android {
         )
     }
 
+    // Clé d'upload Google Play, lue depuis local.properties (jamais commitée).
+    // Sans ces valeurs (ex. CI), le build release n'est pas signé.
+    val keystorePath = localProperties.getProperty("KEYSTORE_PATH")
+    if (keystorePath != null) {
+        signingConfigs {
+            create("release") {
+                storeFile = rootProject.file(keystorePath)
+                storePassword = localProperties.getProperty("KEYSTORE_PASSWORD")
+                keyAlias = localProperties.getProperty("KEY_ALIAS")
+                keyPassword = localProperties.getProperty("KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            if (keystorePath != null) signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
@@ -85,6 +101,11 @@ dependencies {
 
     // Image loading
     implementation(libs.coil.compose)
+
+    // Widget et notification du matin
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
+    implementation(libs.androidx.work.runtime)
 
     // Claude (styliste IA)
     implementation(libs.anthropic.java)

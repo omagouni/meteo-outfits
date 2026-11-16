@@ -20,9 +20,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.myapplication.R
 
 @Composable
 fun LoadingView(modifier: Modifier = Modifier) {
@@ -42,24 +44,16 @@ fun LoadingView(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "🌤️",
-            fontSize = 48.sp,
-            modifier = Modifier.scale(scale)
-        )
-
+        Text(text = "🌤️", fontSize = 48.sp, modifier = Modifier.scale(scale))
         Spacer(modifier = Modifier.height(20.dp))
-
         CircularProgressIndicator(
             modifier = Modifier.size(32.dp),
             color = Color.White.copy(alpha = 0.8f),
             strokeWidth = 3.dp
         )
-
         Spacer(modifier = Modifier.height(16.dp))
-
         Text(
-            text = "Checking the weather...",
+            text = stringResource(R.string.loading_checking),
             fontSize = 16.sp,
             fontWeight = FontWeight.Medium,
             color = Color.White.copy(alpha = 0.8f)

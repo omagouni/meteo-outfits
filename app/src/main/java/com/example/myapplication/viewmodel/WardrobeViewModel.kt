@@ -1,8 +1,10 @@
 package com.example.myapplication.viewmodel
 
 import android.app.Application
+import androidx.annotation.StringRes
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.myapplication.R
 import com.example.myapplication.data.local.WardrobeRepository
 import com.example.myapplication.data.model.ClothingCategory
 import com.example.myapplication.data.model.ClothingItem
@@ -17,14 +19,14 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-enum class WardrobeSort(val label: String) {
-    RECENT("Recently added"),
-    NAME("Name"),
-    CATEGORY("Category"),
-    WARMEST("Warmest first"),
-    LIGHTEST("Lightest first"),
-    LEAST_WORN("Least worn"),
-    LAST_WORN("Recently worn")
+enum class WardrobeSort(@StringRes val labelRes: Int) {
+    RECENT(R.string.sort_recent),
+    NAME(R.string.sort_name),
+    CATEGORY(R.string.sort_category),
+    WARMEST(R.string.sort_warmest),
+    LIGHTEST(R.string.sort_lightest),
+    LEAST_WORN(R.string.sort_least_worn),
+    LAST_WORN(R.string.sort_last_worn)
 }
 
 class WardrobeViewModel(application: Application) : AndroidViewModel(application) {

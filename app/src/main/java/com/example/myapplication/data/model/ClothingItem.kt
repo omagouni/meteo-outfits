@@ -1,13 +1,15 @@
 package com.example.myapplication.data.model
 
+import androidx.annotation.StringRes
+import com.example.myapplication.R
 import java.util.UUID
 
-enum class ClothingCategory(val label: String, val emoji: String) {
-    OUTERWEAR("Outerwear", "🧥"),
-    TOP("Top", "👕"),
-    BOTTOM("Bottom", "👖"),
-    SHOES("Shoes", "👟"),
-    ACCESSORY("Accessory", "🧣")
+enum class ClothingCategory(@StringRes val labelRes: Int, val emoji: String) {
+    OUTERWEAR(R.string.cat_outerwear, "🧥"),
+    TOP(R.string.cat_top, "👕"),
+    BOTTOM(R.string.cat_bottom, "👖"),
+    SHOES(R.string.cat_shoes, "👟"),
+    ACCESSORY(R.string.cat_accessory, "🧣")
 }
 
 /**
@@ -42,6 +44,16 @@ data class ClothingItem(
         const val MIN_WARMTH = 1
         const val MAX_WARMTH = 5
 
+        @StringRes
+        fun warmthRes(warmth: Int): Int = when (warmth) {
+            1 -> R.string.warmth_1
+            2 -> R.string.warmth_2
+            3 -> R.string.warmth_3
+            4 -> R.string.warmth_4
+            else -> R.string.warmth_5
+        }
+
+        /** Libellé anglais, pour le prompt du styliste IA. */
         fun warmthLabel(warmth: Int): String = when (warmth) {
             1 -> "Very light"
             2 -> "Light"

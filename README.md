@@ -1,55 +1,49 @@
-# Météo & Outfits
+# Météo Outfits
 
-Application Android (Kotlin + Jetpack Compose) qui récupère la météo via l'API OpenWeatherMap et suggère une tenue adaptée.
+Application Android (Kotlin + Jetpack Compose) qui compose ta tenue du jour avec **tes propres vêtements** selon la météo, et des **tenues assorties avec tes amis** pour vos rendez-vous, selon la météo là où vous vous retrouvez.
+
+Identifiant : `com.meteooutfits.app` · Interface en français et en anglais.
 
 ## Fonctionnalités
-- Météo actuelle par ville (OpenWeatherMap)
-- Prévisions sur 5 jours : choisis le jour (Now / Today / Tomorrow / …) pour voir la tenue adaptée
-- Suggestion de tenue basée sur la température **ressentie**, la probabilité de pluie, le vent
-- Conseil "couche amovible" quand l'écart de température dans la journée est important
-- Dernière ville recherchée mémorisée
+
+### Météo et tenue du jour
+- Météo actuelle et prévisions sur 5 jours par ville (OpenWeatherMap, descriptions dans la langue du téléphone)
+- Tenue basée sur la température **ressentie**, la probabilité de pluie, le vent, l'écart matin/soir
+- **Widget** d'écran d'accueil et **notification du matin** (7 h 30) avec la tenue du jour
 
 ### Garde-robe
-- Ajoute tes vêtements : nom, catégorie, marque, **référence**, couleur, chaleur (1–5), imperméable / coupe-vent, notes
-- **Import depuis un lien produit** : colle l'URL d'une boutique, l'app récupère le nom, la photo et la marque (balises Open Graph)
-- Bouton **"Find it online"** pour retrouver un vêtement à partir de sa marque + référence
-- Recherche, filtre par catégorie et tri (récents, nom, chaleur, moins portés, portés récemment…)
-- **Tenue du jour depuis ta garde-robe** : pour le jour sélectionné, l'app choisit manteau / haut / bas / chaussures / accessoires selon le ressenti, la pluie et le vent, évite ce que tu as porté hier, et signale ce qui manque
-- "I'm wearing this today" enregistre ce que tu portes (compteur + date)
+- Vêtements avec nom, catégorie, marque, référence, couleur, chaleur (1–5), imperméable / coupe-vent, notes
+- **Import depuis un lien produit** (nom, photo, marque via les balises Open Graph), bouton « Trouver en ligne »
+- Recherche, filtre par catégorie, tris ; « Je porte ça aujourd'hui » enregistre ce que tu portes
+- Tenue du jour choisie dans ta garde-robe, qui évite ce que tu as porté la veille
 
-## Prochaines étapes
-- [x] Garde-robe : ajouter ses propres vêtements (avec références/liens trouvés sur Internet)
-- [x] Tri et sélection automatique de la tenue du jour à partir de la garde-robe
-- [x] Suggestions enrichies par un LLM (Claude)
+### Rendez-vous (tenues assorties) — ce qui n'existe nulle part ailleurs
+- Choisis un ami, une ville et un jour : l'appli prend la météo du lieu et compose ta tenue
+- **Lien d'invitation sans compte ni serveur** : l'ami ouvre le lien dans l'appli (ou le colle) et obtient sa tenue, coordonnée en couleurs avec la tienne (couleur commune, couleurs voisines, pas de couleurs qui jurent)
+- Sans garde-robe, l'ami choisit juste ses couleurs et obtient quand même sa tenue
+- Tout est calculé sur le téléphone ; les rendez-vous sont stockés localement
 
-### Styliste IA (Claude)
-Interrupteur **"✨ AI stylist"** sur la carte "From your wardrobe" (visible seulement si une clé est configurée).
-Quand il est activé :
-1. la tenue calculée par les règles s'affiche tout de suite ;
-2. la météo du jour + ta garde-robe (nom, catégorie, chaleur, imperméable, couleur, marque, historique de port)
-   sont envoyées à Claude (`claude-opus-5-5`, sortie JSON structurée, effort bas pour la rapidité) ;
-3. la tenue de Claude remplace celle des règles, avec une raison par pièce et un conseil de style.
+### Styliste IA (optionnel, versions de développement)
+Activé seulement si `ANTHROPIC_API_KEY` est renseignée. Voir `domain/ClaudeOutfitPlanner.kt`. Absent de la version publiée.
 
-En cas d'erreur (pas de réseau, clé invalide, refus), l'app garde la tenue des règles et l'indique.
-Les réponses sont mises en cache par jour + météo + garde-robe pour ne pas repayer le même appel.
-Le repli serveur (`fallbacks`) est activé : si un filtre de sécurité refuse la requête, l'API la rejoue sur un autre modèle.
-
-Code : `domain/ClaudeOutfitPlanner.kt` (appel SDK) et `domain/ClaudeOutfitPrompt.kt` (prompt, schéma, validation de la réponse).
-
-**⚠️ Clé API** : la clé est compilée dans l'APK, donc **extractable par toute personne qui a l'APK**.
-C'est acceptable pour un usage perso ou du développement, pas pour une app publiée. Pour publier,
-fais passer les appels par ton propre serveur (qui détient la clé) et remplace le client dans `ClaudeOutfitPlanner`.
-
-## Installation
+## Installation (développement)
 1. Cloner le dépôt et l'ouvrir dans Android Studio.
 2. Créer une clé gratuite sur https://openweathermap.org/appid
-3. Ajouter dans `local.properties` (fichier non versionné) :
+3. Dans `local.properties` (non versionné) :
    ```properties
    WEATHER_API_KEY=ta_cle_ici
-   # optionnel, pour le styliste IA (clé sur https://platform.claude.com)
+   # optionnel : styliste IA
    ANTHROPIC_API_KEY=ta_cle_claude
    ```
 4. Synchroniser Gradle puis lancer l'app.
+
+## Publication
+- **Signature** : le build release lit `KEYSTORE_PATH`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD` dans `local.properties`. Le fichier `keystore/upload-keystore.jks` n'est pas versionné : **sauvegarde-le ailleurs** (sans lui, impossible de mettre à jour l'appli sur Google Play).
+- **Bundle** : `./gradlew :app:bundleRelease` → `app/build/outputs/bundle/release/app-release.aab`
+- **Fiche store** : textes FR/EN, réponses « Sécurité des données » et étapes du test fermé dans [store/play-listing.md](store/play-listing.md)
+- **Politique de confidentialité et page d'invitation** : dossier [docs/](docs/), à publier avec GitHub Pages (Settings → Pages → branche `main`, dossier `/docs`). Les liens d'invitation pointent vers `https://omagouni.github.io/meteo-outfits/m/`.
+- **Plan de contenu TikTok** : [marketing/tiktok-plan.md](marketing/tiktok-plan.md)
+- **Étude de marché** : [reports/](reports/)
 
 ## Tests
 ```bash
@@ -59,13 +53,15 @@ fais passer les appels par ton propre serveur (qui détient la clé) et remplace
 ## Architecture
 ```
 data/
-  model/     ClothingItem, DayWeather, réponses API
-  local/     WardrobeRepository (JSON dans le stockage interne)
-  remote/    Retrofit OpenWeatherMap, LinkPreviewFetcher
-domain/      ForecastAggregator, OutfitRecommender, WardrobeOutfitPlanner
-viewmodel/   WeatherViewModel, WardrobeViewModel
-ui/          WeatherScreen, wardrobe/, components/
+  model/     ClothingItem, DayWeather, Meetup (+ lien d'invitation), réponses API
+  local/     JsonFileStore, WardrobeRepository, MeetupRepository, OutfitSnapshotStore
+  remote/    Retrofit OpenWeatherMap, WeatherRepository, LinkPreviewFetcher
+domain/      ForecastAggregator, OutfitRecommender, WardrobeOutfitPlanner,
+             ColorFamily, OutfitHarmony, MatchyPlanner (tenues coordonnées)
+viewmodel/   WeatherViewModel, WardrobeViewModel, MeetupViewModel
+ui/          WeatherScreen, wardrobe/, meetup/, components/, UiText (textes traduits)
+widget/      OutfitWidget (Glance), MorningOutfitWorker (WorkManager)
 ```
 
 ## Stack
-Kotlin · Jetpack Compose · Material 3 · Retrofit · Coil · MVVM (ViewModel) · Anthropic Java SDK (Claude)
+Kotlin · Jetpack Compose · Material 3 · Retrofit · Coil · Glance · WorkManager · MVVM

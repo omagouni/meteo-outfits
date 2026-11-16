@@ -1,6 +1,8 @@
 package com.example.myapplication.domain
 
+import com.example.myapplication.R
 import com.example.myapplication.data.model.DayWeather
+import com.example.myapplication.ui.UiText
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -22,29 +24,29 @@ class OutfitRecommenderTest {
         description = condition, precipitationChance = pop, isNight = false, isCurrent = isCurrent
     )
 
-    private fun names(d: DayWeather) =
-        OutfitRecommender.getOutfit(d).let { it.mainOutfit + it.accessories }.map { it.name }
+    private fun names(d: DayWeather): List<Int> =
+        OutfitRecommender.getOutfit(d).let { it.mainOutfit + it.accessories }
+            .map { (it.name as UiText.Res).id }
 
     @Test
     fun `dresses for feels-like temperature`() {
-        val outfit = names(day(temp = 6.0, feelsLike = 1.0))
-        assertTrue("Heavy Coat" in outfit)
+        assertTrue(R.string.oi_heavy_coat in names(day(temp = 6.0, feelsLike = 1.0)))
     }
 
     @Test
     fun `high rain probability adds umbrella even if condition is cloudy`() {
-        assertTrue("Umbrella" in names(day(condition = "Clouds", pop = 0.7)))
-        assertFalse("Umbrella" in names(day(condition = "Clouds", pop = 0.2)))
+        assertTrue(R.string.oi_umbrella in names(day(condition = "Clouds", pop = 0.7)))
+        assertFalse(R.string.oi_umbrella in names(day(condition = "Clouds", pop = 0.2)))
     }
 
     @Test
     fun `large temperature swing suggests removable layer for forecast days only`() {
-        assertTrue("Removable Layer" in names(day(min = 8.0, max = 20.0)))
-        assertFalse("Removable Layer" in names(day(min = 8.0, max = 20.0, isCurrent = true)))
+        assertTrue(R.string.oi_removable_layer in names(day(min = 8.0, max = 20.0)))
+        assertFalse(R.string.oi_removable_layer in names(day(min = 8.0, max = 20.0, isCurrent = true)))
     }
 
     @Test
     fun `strong wind adds windbreaker`() {
-        assertTrue("Windbreaker" in names(day(wind = 40.0)))
+        assertTrue(R.string.oi_windbreaker in names(day(wind = 40.0)))
     }
 }

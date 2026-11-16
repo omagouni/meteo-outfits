@@ -1,6 +1,7 @@
 package com.example.myapplication.data.model
 
 import com.example.myapplication.domain.WardrobeOutfit
+import com.example.myapplication.ui.UiText
 
 /** État du styliste IA pour la tenue affichée. */
 sealed class AiStatus {
@@ -9,7 +10,7 @@ sealed class AiStatus {
     /** Tenue des règles affichée en attendant la réponse de l'IA. */
     data object Loading : AiStatus()
     data object Ready : AiStatus()
-    data class Failed(val message: String) : AiStatus()
+    data object Failed : AiStatus()
 }
 
 sealed class WeatherUiState {
@@ -29,5 +30,5 @@ sealed class WeatherUiState {
     ) : WeatherUiState() {
         val selectedDay: DayWeather get() = days[selectedIndex]
     }
-    data class Error(val message: String) : WeatherUiState()
+    data class Error(val message: UiText) : WeatherUiState()
 }

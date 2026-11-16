@@ -1,12 +1,14 @@
 package com.example.myapplication.domain
 
+import com.example.myapplication.R
 import com.example.myapplication.data.model.ClothingCategory
 import com.example.myapplication.data.model.ClothingItem
 import com.example.myapplication.data.model.DayWeather
+import com.example.myapplication.ui.UiText
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-data class WardrobePick(val item: ClothingItem, val reason: String)
+data class WardrobePick(val item: ClothingItem, val reason: UiText)
 
 /** Une pièce dont on aurait besoin mais qu'aucun vêtement de la garde-robe ne couvre. */
 data class MissingSlot(val category: ClothingCategory, val targetWarmth: Int, val needsWaterproof: Boolean)
@@ -19,7 +21,9 @@ data class WardrobeOutfit(
     /** Conseil de style (fourni par l'IA). */
     val tip: String? = null,
     val source: PlanSource = PlanSource.RULES
-)
+) {
+    val colors: List<ColorFamily> get() = picks.map { ColorFamily.fromText(it.item.color) }
+}
 
 /**
  * Choisit une tenue dans la garde-robe pour une journée.
@@ -47,42 +51,57 @@ object RuleBasedOutfitPlanner : OutfitPlanner {
         else -> 1
     }
 
-    /** Version synchrone, utilisée pour l'affichage immédiat. */
-    fun planNow(day: DayWeather, wardrobe: List<ClothingItem>, referenceDay: Long): WardrobeOutfit {
-        val target = targetWarmth(day.feelsLike)
+    /** Un emplacement à remplir pour la journée (catégorie + chaleur visée). */
+    data class Slot(val category: ClothingCategory, val targetWarmth: Int, val waterproofMatters: Boolean)
+
+    /** Un vêtement candidat pour un emplacement, avec son score météo et sa raison. */
+    data class Candidate(val item: ClothingItem, val score: Double, val reason: UiText)
+
+    /** Contexte météo de la journée, partagé par tous les calculs. */
+    class Context(val day: DayWeather, val referenceDay: Long) {
         val rainy = OutfitRecommender.isRainy(day)
         val windy = day.windKmh > 25
+        val target = targetWarmth(day.feelsLike)
         val needsOuterwear = day.feelsLike < 18 || rainy || windy
-        val ctx = Context(day, rainy, windy, referenceDay)
+        val feelsLike = day.feelsLike.roundToInt()
+    }
 
+    fun slots(ctx: Context): List<Slot> = buildList {
+        val target = ctx.target
+        if (ctx.needsOuterwear) add(Slot(ClothingCategory.OUTERWEAR, target, waterproofMatters = true))
+        // Sous un manteau, le haut peut être un cran plus léger.
+        add(Slot(ClothingCategory.TOP, if (ctx.needsOuterwear) (target - 1).coerceAtLeast(1) else target, false))
+        add(Slot(ClothingCategory.BOTTOM, target.coerceAtMost(4), false))
+        add(Slot(ClothingCategory.SHOES, target.coerceAtMost(4), waterproofMatters = true))
+    }
+
+    /** Candidats d'un emplacement, du meilleur au moins bon. Vide si rien ne convient. */
+    fun candidates(slot: Slot, wardrobe: List<ClothingItem>, ctx: Context): List<Candidate> =
+        wardrobe
+            .filter { it.category == slot.category && abs(it.warmth - slot.targetWarmth) <= MAX_WARMTH_GAP }
+            .map { Candidate(it, score(it, slot, ctx), reason(it, slot, ctx)) }
+            .sortedWith(compareByDescending<Candidate> { it.score }.thenBy { it.item.wearCount })
+
+    /** Version synchrone, utilisée pour l'affichage immédiat. */
+    fun planNow(day: DayWeather, wardrobe: List<ClothingItem>, referenceDay: Long): WardrobeOutfit {
+        val ctx = Context(day, referenceDay)
         val picks = mutableListOf<WardrobePick>()
         val missing = mutableListOf<MissingSlot>()
 
-        fun fill(category: ClothingCategory, slotTarget: Int, waterproofMatters: Boolean) {
-            val best = wardrobe
-                .filter { it.category == category && abs(it.warmth - slotTarget) <= MAX_WARMTH_GAP }
-                .maxWithOrNull(compareBy<ClothingItem> { score(it, slotTarget, waterproofMatters, ctx) }
-                    .thenBy { -it.wearCount })
-            if (best != null) picks += WardrobePick(best, reason(best, slotTarget, waterproofMatters, ctx))
-            else missing += MissingSlot(category, slotTarget, waterproofMatters && rainy)
+        for (slot in slots(ctx)) {
+            val best = candidates(slot, wardrobe, ctx).firstOrNull()
+            if (best != null) picks += WardrobePick(best.item, best.reason)
+            else missing += MissingSlot(slot.category, slot.targetWarmth, slot.waterproofMatters && ctx.rainy)
         }
-
-        if (needsOuterwear) fill(ClothingCategory.OUTERWEAR, target, waterproofMatters = true)
-        // Sous un manteau, le haut peut être un cran plus léger.
-        fill(ClothingCategory.TOP, if (needsOuterwear) (target - 1).coerceAtLeast(1) else target, false)
-        fill(ClothingCategory.BOTTOM, target.coerceAtMost(4), false)
-        fill(ClothingCategory.SHOES, target.coerceAtMost(4), waterproofMatters = true)
-
-        picks += pickAccessories(wardrobe, target, ctx)
-
+        picks += pickAccessories(wardrobe, ctx)
         return WardrobeOutfit(picks, missing)
     }
 
-    private data class Context(val day: DayWeather, val rainy: Boolean, val windy: Boolean, val referenceDay: Long)
-
-    private fun score(item: ClothingItem, target: Int, waterproofMatters: Boolean, ctx: Context): Double {
-        var score = -abs(item.warmth - target) * 2.0
-        if (waterproofMatters && ctx.rainy) score += if (item.waterproof) 3.0 else -2.0
+    private fun score(item: ClothingItem, slot: Slot, ctx: Context): Double {
+        // Écart de chaleur au carré : une pièce deux crans à côté ne doit pas être rattrapée par la couleur.
+        val gap = abs(item.warmth - slot.targetWarmth)
+        var score = -gap * gap * 2.0
+        if (slot.waterproofMatters && ctx.rainy) score += if (item.waterproof) 3.0 else -2.0
         if (ctx.windy && item.windproof) score += 2.0
         if (item.favorite) score += 0.5
         score += recencyScore(item, ctx.referenceDay)
@@ -90,10 +109,10 @@ object RuleBasedOutfitPlanner : OutfitPlanner {
     }
 
     /**
-     * Ce qui est déjà porté aujourd'hui reste en tête (la tenue ne change pas après "I'm wearing this"),
+     * Ce qui est déjà porté aujourd'hui reste en tête (la tenue ne change pas après "Je porte ça"),
      * ce qui a été porté hier ou avant-hier est pénalisé pour varier.
      */
-    private fun recencyScore(item: ClothingItem, referenceDay: Long): Double {
+    fun recencyScore(item: ClothingItem, referenceDay: Long): Double {
         val last = item.lastWornEpochDay ?: return 0.0
         return when (referenceDay - last) {
             0L -> 5.0
@@ -103,35 +122,35 @@ object RuleBasedOutfitPlanner : OutfitPlanner {
         }
     }
 
-    private fun pickAccessories(wardrobe: List<ClothingItem>, target: Int, ctx: Context): List<WardrobePick> {
+    fun pickAccessories(wardrobe: List<ClothingItem>, ctx: Context): List<WardrobePick> {
         val accessories = wardrobe.filter { it.category == ClothingCategory.ACCESSORY }
         val chosen = linkedMapOf<String, WardrobePick>()
 
         if (ctx.rainy) {
             accessories.filter { it.waterproof }
                 .maxByOrNull { recencyScore(it, ctx.referenceDay) + if (it.favorite) 0.5 else 0.0 }
-                ?.let { chosen[it.id] = WardrobePick(it, rainReason(ctx.day)) }
+                ?.let { chosen[it.id] = WardrobePick(it, OutfitRecommender.rainDescription(ctx.day)) }
         }
-        if (target >= 4) {
+        if (ctx.target >= 4) {
             accessories.filter { it.warmth >= 3 && it.id !in chosen }
                 .sortedByDescending { it.warmth + recencyScore(it, ctx.referenceDay) }
                 .take(MAX_ACCESSORIES - chosen.size)
-                .forEach { chosen[it.id] = WardrobePick(it, "Extra warmth for ${ctx.day.feelsLike.roundToInt()}°") }
+                .forEach { chosen[it.id] = WardrobePick(it, UiText.res(R.string.reason_extra_warmth, ctx.feelsLike)) }
         }
         return chosen.values.toList()
     }
 
-    private fun reason(item: ClothingItem, target: Int, waterproofMatters: Boolean, ctx: Context): String {
-        val parts = mutableListOf<String>()
-        parts += if (item.warmth == target) "${ClothingItem.warmthLabel(item.warmth)} — right for ${ctx.day.feelsLike.roundToInt()}°"
-        else if (item.warmth > target) "A bit warm for ${ctx.day.feelsLike.roundToInt()}°"
-        else "A bit light for ${ctx.day.feelsLike.roundToInt()}°"
-        if (waterproofMatters && ctx.rainy && item.waterproof) parts += "waterproof"
-        if (ctx.windy && item.windproof) parts += "windproof"
-        if (item.lastWornEpochDay == ctx.referenceDay) parts += "worn today"
-        return parts.joinToString(" · ")
+    private fun reason(item: ClothingItem, slot: Slot, ctx: Context): UiText {
+        val parts = mutableListOf<UiText>()
+        parts += when {
+            item.warmth == slot.targetWarmth ->
+                UiText.Res(R.string.reason_right_for, listOf(UiText.res(ClothingItem.warmthRes(item.warmth)), ctx.feelsLike))
+            item.warmth > slot.targetWarmth -> UiText.res(R.string.reason_bit_warm, ctx.feelsLike)
+            else -> UiText.res(R.string.reason_bit_light, ctx.feelsLike)
+        }
+        if (slot.waterproofMatters && ctx.rainy && item.waterproof) parts += UiText.res(R.string.reason_waterproof)
+        if (ctx.windy && item.windproof) parts += UiText.res(R.string.reason_windproof)
+        if (item.lastWornEpochDay == ctx.referenceDay) parts += UiText.res(R.string.reason_worn_today)
+        return UiText.Joined(parts)
     }
-
-    private fun rainReason(day: DayWeather): String =
-        day.precipitationChance?.let { "${(it * 100).roundToInt()}% chance of rain" } ?: "Rain expected"
 }
