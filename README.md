@@ -4,7 +4,10 @@ Application Android (Kotlin + Jetpack Compose) qui récupère la météo via l'A
 
 ## Fonctionnalités
 - Météo actuelle par ville (OpenWeatherMap)
-- Suggestion de tenue selon la température et les conditions
+- Prévisions sur 5 jours : choisis le jour (Now / Today / Tomorrow / …) pour voir la tenue adaptée
+- Suggestion de tenue basée sur la température **ressentie**, la probabilité de pluie, le vent
+- Conseil "couche amovible" quand l'écart de température dans la journée est important
+- Dernière ville recherchée mémorisée
 
 ## Prochaines étapes
 - [ ] Garde-robe : ajouter ses propres vêtements (avec références/liens trouvés sur Internet)
@@ -19,6 +22,11 @@ Application Android (Kotlin + Jetpack Compose) qui récupère la météo via l'A
    WEATHER_API_KEY=ta_cle_ici
    ```
 4. Synchroniser Gradle puis lancer l'app.
+
+## Tests
+```bash
+./gradlew :app:testDebugUnitTest
+```
 
 ## Stack
 Kotlin · Jetpack Compose · Material 3 · Retrofit · Coil · MVVM (ViewModel)

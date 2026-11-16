@@ -45,6 +45,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.data.model.WeatherUiState
+import com.example.myapplication.ui.components.DaySelector
 import com.example.myapplication.ui.components.ErrorView
 import com.example.myapplication.ui.components.LoadingView
 import com.example.myapplication.ui.components.OutfitCard
@@ -58,15 +59,10 @@ fun WeatherScreen(viewModel: WeatherViewModel) {
     val city by viewModel.city.collectAsState()
     val focusManager = LocalFocusManager.current
 
-    // Determine background condition
-    val condition = when (val state = uiState) {
-        is WeatherUiState.Success -> state.weather.weather.firstOrNull()?.main ?: "Clear"
-        else -> "Clear"
-    }
-    val isNight = when (val state = uiState) {
-        is WeatherUiState.Success -> state.isNight
-        else -> false
-    }
+    // Le fond suit la journée sélectionnée
+    val selectedDay = (uiState as? WeatherUiState.Success)?.selectedDay
+    val condition = selectedDay?.condition ?: "Clear"
+    val isNight = selectedDay?.isNight ?: false
 
     WeatherBackground(
         condition = condition,
@@ -169,6 +165,8 @@ fun WeatherScreen(viewModel: WeatherViewModel) {
                     fadeIn(tween(500)) togetherWith fadeOut(tween(300))
                 },
                 label = "weatherContent",
+                // Ne pas rejouer la transition quand on change simplement de jour
+                contentKey = { it::class },
                 modifier = Modifier.weight(1f)
             ) { state ->
                 when (state) {
@@ -184,9 +182,18 @@ fun WeatherScreen(viewModel: WeatherViewModel) {
                                 .fillMaxSize()
                                 .verticalScroll(rememberScrollState())
                         ) {
+                            if (state.days.size > 1) {
+                                DaySelector(
+                                    days = state.days,
+                                    selectedIndex = state.selectedIndex,
+                                    onSelect = viewModel::selectDay
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+
                             WeatherHeader(
-                                weather = state.weather,
-                                isNight = state.isNight
+                                cityLabel = state.cityLabel,
+                                day = state.selectedDay
                             )
 
                             Spacer(modifier = Modifier.height(16.dp))
